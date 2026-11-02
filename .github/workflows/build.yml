@@ -1,0 +1,39 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y build-essential ccache git python3-pip python3-setuptools
+        pip install --upgrade pip
+        pip install buildozer cython kivy
+
+    - name: Initialize and Build APK
+      run: |
+        yes | buildozer init
+        sed -i 's/package.name = myapp/package.name = fatimaai/' buildozer.spec
+        sed -i 's/package.domain = org.test/package.domain = com.fatima/' buildozer.spec
+        sed -i 's/title = My Application/title = Fatima JARVIS AI/' buildozer.spec
+        buildozer -v android debug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: Fatima-JARVIS-APK
+        path: bin/*.apk
